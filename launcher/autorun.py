@@ -4,7 +4,7 @@ from __future__ import with_statement
 
 import os
 import sys
-import launcher_log
+from instances import xlog
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -46,29 +46,34 @@ if sys.platform == 'win32':
 
     run_cmd = "\"" + os.path.abspath( os.path.join(root_path, "python27", "1.0", "pythonw.exe")) + "\" \"" +\
               os.path.abspath( os.path.join(root_path, "launcher", "start.py")) + "\""
-elif sys.platform == 'linux' or sys.platform == 'linux2':
+elif sys.platform.startswith('linux'):
     _xdg_config_home = os.environ.get("XDG_CONFIG_HOME", "~/.config")
-    _xdg_user_autostart = os.path.join(os.path.expanduser(_xdg_config_home),
-            "autostart")
+    home_config_path = os.path.expanduser(_xdg_config_home)
+    _xdg_user_autostart = os.path.join(home_config_path, "autostart")
 
     def getfilename(name):
         """get the filename of an autostart (.desktop) file"""
         return os.path.join(_xdg_user_autostart, name + ".desktop")
 
     def add(name, application):
-        if not os.path.isdir(os.path.expanduser(_xdg_config_home)):
-            launcher_log.warn("autorun linux config path not found:%s", os.path.expanduser(_xdg_config_home))
+        if not os.path.isdir(home_config_path):
+            xlog.warn("autorun linux config path not found:%s", home_config_path)
             return
 
         if not os.path.isdir(_xdg_user_autostart):
-            os.mkdir(_xdg_user_autostart)
+            try:
+                os.mkdir(_xdg_user_autostart)
+            except Exception as e:
+                xlog.warn("Enable auto start, create path:%s fail:%r", _xdg_user_autostart, e)
+                return
 
         """add a new autostart entry"""
         desktop_entry = "[Desktop Entry]\n"\
             "Name=%s\n"\
             "Exec=%s\n"\
             "Type=Application\n"\
-            "Terminal=false\n" % (name, application)
+            "Terminal=false\n"\
+            "X-GNOME-Autostart-enabled=true" % (name, application)
         with open(getfilename(name), "w") as f:
             f.write(desktop_entry)
 
@@ -108,21 +113,26 @@ elif sys.platform == 'darwin':
 </dict>
 </plist>"""
 
-    run_cmd = os.path.abspath( os.path.join(root_path, "start.sh"))
+    run_cmd = os.path.abspath( os.path.join(root_path, "start.command"))
     from os.path import expanduser
     home = expanduser("~")
+    launch_path = os.path.join(home, "Library/LaunchAgents")
 
-    plist_file_path = os.path.join(home, "Library/LaunchAgents/com.xxnet.launcher.plist")
+    plist_file_path = os.path.join(launch_path, "com.xxnet.launcher.plist")
 
     def add(name, cmd):
         file_content = plist_template % cmd
-        launcher_log.info("create file:%s", plist_file_path)
+        xlog.info("create file:%s", plist_file_path)
+
+        if not os.path.isdir(launch_path):
+            os.mkdir(launch_path, 0755)
+            
         with open(plist_file_path, "w") as f:
             f.write(file_content)
     def remove(name):
         if(os.path.isfile(plist_file_path)):
             os.unlink(plist_file_path)
-            launcher_log.info("remove file:%s", plist_file_path)
+            xlog.info("remove file:%s", plist_file_path)
 else:
     def add(name, cmd):
         pass

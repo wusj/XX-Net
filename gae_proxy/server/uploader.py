@@ -76,11 +76,6 @@ def do_clean_up():
     sys.stderr = org_stderr
     sys.stdout = org_stdout
 
-try:
-    socket.create_connection(('127.0.0.1', 8087), timeout=1).close()
-    os.environ['HTTPS_PROXY'] = '127.0.0.1:8087'
-except:
-    pass
 
 def upload(appid, email, password):
     global defined_input
@@ -104,7 +99,7 @@ def upload(appid, email, password):
         fp.write(re.sub(r'application:\s*\S+', 'application: '+appid, yaml))
 
     try:
-        for i in range(100):
+        for i in range(3):
             try:
                 result = appcfg.AppCfgApp(['appcfg', 'rollback', dirname], password_input_fn=getpass_getpass, raw_input_fn = my_input, error_fh = my_stdout).Run()
                 if result != 0:
@@ -159,21 +154,17 @@ def clean_cookie_file():
 
 def update_rc4_password(rc4_password):
     global code_path
-    gae_file_name = os.path.join(code_path, "gae", "gae.py")
-    try:
-        with open(gae_file_name, 'r') as fgae:
-            lines = fgae.readlines()
+    file_names = ["gae.py", "wsgi.py"]
+    for file_name in file_names:
+        filename = os.path.join(code_path, "gae", file_name)
+        try:
+            with open(filename, 'rb') as fp:
+                file_data = fp.read()
+            with open(filename, 'wb') as fp:
+                fp.write(re.sub(r"__password__ = '.*?'", "__password__ = '%s'" % rc4_password, file_data))
 
-        for i in range(0, len(lines)):
-            if lines[i].startswith('__password__'):
-                lines[i] = "__password__ = '%s'\n" % rc4_password
-                break
-
-        with open(gae_file_name, 'w') as fgae:
-            fgae.writelines(lines)
-
-    except Exception as e:
-        my_stdout.write('Setting in the Gae.py RC4 password failed!\n')
+        except IOError as e:
+            my_stdout.write('Setting in the %s password failed!\n' % file_name)
 
 def uploads(appids, email, password, rc4_password):
     update_rc4_password(rc4_password)
@@ -221,7 +212,7 @@ def uploads(appids, email, password, rc4_password):
 
 def main():
     if len(sys.argv) < 3:
-        my_stdout.write("Usage: uploader.py <appids> <email> [password] [rc4_password]\r\n")
+        my_stdout.write("Usage: uploader.py <appids> <email> [password] [rc4_password] [proxy]\r\n")
         input_line = " ".join(sys.argv)
         my_stdout.write("input err: %s \r\n" % input_line)
         my_stdout.write("== END ==\n")
@@ -240,6 +231,16 @@ def main():
         rc4_password = sys.argv[4]
     else:
         rc4_password = ''
+
+    if len(sys.argv) >= 6:
+        if sys.argv[5] != "no_proxy":
+            os.environ['HTTPS_PROXY'] = sys.argv[5]
+            my_stdout.write("set proxy to %s\r\n" % sys.argv[5])
+        else:
+            my_stdout.write("set no proxy\r\n")
+    else:
+        os.environ['HTTPS_PROXY'] = '127.0.0.1:8087'
+        my_stdout.write("set proxy to http://127.0.0.1:8087\r\n")
 
     uploads(appids, email, password, rc4_password)
 

@@ -40,7 +40,10 @@ import sys
 import os
 
 current_path = os.path.dirname(os.path.abspath(__file__))
-python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
+root_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir))
+data_path = os.path.join(root_path, 'data')
+data_gae_proxy_path = os.path.join(data_path, 'gae_proxy')
+python_path = os.path.abspath( os.path.join(root_path, 'python27', '1.0'))
 
 noarch_lib = os.path.abspath( os.path.join(python_path, 'lib', 'noarch'))
 sys.path.append(noarch_lib)
@@ -60,7 +63,6 @@ elif sys.platform == "darwin":
 import time
 import traceback
 import platform
-import xlog
 import random
 import threading
 import urllib2
@@ -71,20 +73,36 @@ if os.path.islink(__file__):
 work_path = os.path.dirname(os.path.abspath(__file__))
 os.chdir(work_path)
 
+
+def create_data_path():
+    if not os.path.isdir(data_path):
+        os.mkdir(data_path)
+
+    if not os.path.isdir(data_gae_proxy_path):
+        os.mkdir(data_gae_proxy_path)
+create_data_path()
+
+
+from config import config
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
+xlog.set_buffer(500)
+if config.log_file:
+    log_file = os.path.join(data_gae_proxy_path, "local.log")
+    xlog.set_file(log_file)
+
 from cert_util import CertUtil
 import pac_server
-
-import socket, ssl
-NetWorkIOError = (socket.error, ssl.SSLError, OSError)
-
 import simple_http_server
 import proxy_handler
 import connect_control
 import env_info
-from config import config
 import connect_manager
 from gae_handler import spawn_later
 
+
+# launcher/module_init will check this value for start/stop finished
 ready = False
 
 def pre_start():
@@ -167,13 +185,11 @@ def pre_start():
                 error = u'某些安全软件(如 %s)可能和本软件存在冲突，造成 CPU 占用过高。\n如有此现象建议暂时退出此安全软件来继续运行GoAgent' % ','.join(softwares)
                 ctypes.windll.user32.MessageBoxW(None, error, title, 0)
                 #sys.exit(0)
-    if config.GAE_APPIDS[0] == 'gae_proxy':
-        xlog.critical('please edit %s to add your appid to [gae] !', config.CONFIG_FILENAME)
-        sys.exit(-1)
     if config.PAC_ENABLE:
         pac_ip = config.PAC_IP
         url = 'http://%s:%d/%s' % (pac_ip, config.PAC_PORT, config.PAC_FILE)
         spawn_later(600, urllib2.build_opener(urllib2.ProxyHandler({})).open, url)
+
 
 def log_info():
     xlog.info('------------------------------------------------------')
@@ -193,6 +209,7 @@ def log_info():
 
 def main():
     global ready
+
     connect_control.keep_running = True
     config.load()
     connect_manager.https_manager.load_config()
@@ -210,7 +227,7 @@ def main():
     if os.path.islink(__file__):
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    xlog.basicConfig(level=xlog.DEBUG if config.LISTEN_DEBUGINFO else xlog.INFO, format='%(levelname)s - %(asctime)s %(message)s', datefmt='[%b %d %H:%M:%S]')
+    #xlog.basicConfig(level=xlog.DEBUG if config.LISTEN_DEBUGINFO else xlog.INFO, format='%(levelname)s - %(asctime)s %(message)s', datefmt='[%b %d %H:%M:%S]')
     pre_start()
     log_info()
 
@@ -248,10 +265,12 @@ def main():
         pr.print_stats()
 
 
+# called by launcher/module/stop
 def terminate():
     xlog.info("start to terminate GAE_Proxy")
     connect_control.keep_running = False
     xlog.debug("## Set keep_running: %s", connect_control.keep_running)
+
 
 if __name__ == '__main__':
     try:

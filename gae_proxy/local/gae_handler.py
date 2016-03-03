@@ -9,7 +9,6 @@ import zlib
 import functools
 import re
 import io
-import xlog
 import string
 import socket
 import ssl
@@ -17,8 +16,10 @@ import httplib
 import Queue
 import urlparse
 import threading
-import BaseHTTPServer
 
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 from connect_manager import https_manager
 from appids_manager import appid_manager
 
@@ -155,15 +156,17 @@ def request(headers={}, payload=None):
             if ssl_sock.host == '':
                 ssl_sock.appid = appid_manager.get_appid()
                 if not ssl_sock.appid:
+                    google_ip.report_connect_closed(ssl_sock.ip, "no appid")
+                    time.sleep(60)
                     raise GAE_Exception(1, "no appid can use")
                 headers['Host'] = ssl_sock.appid + ".appspot.com"
                 ssl_sock.host = headers['Host']
             else:
                 headers['Host'] = ssl_sock.host
 
-
             response = _request(ssl_sock, headers, payload)
             if not response:
+                google_ip.report_connect_closed(ssl_sock.ip, "request_fail")
                 ssl_sock.close()
                 continue
 
@@ -171,8 +174,9 @@ def request(headers={}, payload=None):
             return response
 
         except Exception as e:
-            xlog.warn('request failed:%s', e)
+            xlog.exception('request failed:%s', e)
             if ssl_sock:
+                google_ip.report_connect_closed(ssl_sock.ip, "request_except")
                 ssl_sock.close()
     raise GAE_Exception(2, "try max times")
 
@@ -229,7 +233,7 @@ def fetch(method, url, headers, body):
     data = response.read(2)
     if len(data) < 2:
         xlog.warn("fetch too short lead byte len:%d %s", len(data), url)
-        response.status = 502
+        response.app_status = 502
         response.fp = io.BytesIO(b'connection aborted. too short lead byte data=' + data)
         response.read = response.fp.read
         return response
@@ -237,7 +241,7 @@ def fetch(method, url, headers, body):
     data = response.read(headers_length)
     if len(data) < headers_length:
         xlog.warn("fetch too short header need:%d get:%d %s", headers_length, len(data), url)
-        response.status = 502
+        response.app_status = 509
         response.fp = io.BytesIO(b'connection aborted. too short headers data=' + data)
         response.read = response.fp.read
         return response
@@ -308,16 +312,22 @@ def handler(method, url, headers, body, wfile):
             if response.app_status != 200:
                 xlog.warn("fetch gae status:%s url:%s", response.app_status, url)
 
-                server_type = response.getheader('Server', "")
-                if "gws" not in server_type and "Google Frontend" not in server_type:
-                    xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
-                    google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
-                    response.close()
+                try:
+                    server_type = response.getheader('Server', "")
+                    if "gws" not in server_type and "Google Frontend" not in server_type and "GFE" not in server_type:
+                        xlog.warn("IP:%s not support GAE, server type:%s", response.ssl_sock.ip, server_type)
+                        google_ip.report_connect_fail(response.ssl_sock.ip, force_remove=True)
+                        response.close()
+                        continue
+                except Exception as e:
+                    errors.append(e)
+                    xlog.warn('gae_handler.handler %r %s , retry...', e, url)
                     continue
 
             if response.app_status == 404:
-                xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
-                appid_manager.report_not_exist(response.ssl_sock.appid)
+                #xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
+                appid_manager.report_not_exist(response.ssl_sock.appid, response.ssl_sock.ip)
+                google_ip.report_connect_closed(response.ssl_sock.ip, "appid not exist")
                 appid = appid_manager.get_appid()
 
                 if not appid:
@@ -340,8 +350,9 @@ def handler(method, url, headers, body, wfile):
                 continue
 
             if response.app_status == 503:
-                xlog.warning('APPID %r out of Quota, remove it.', response.ssl_sock.appid)
+                xlog.warning('APPID %r out of Quota, remove it. %s', response.ssl_sock.appid, response.ssl_sock.ip)
                 appid_manager.report_out_of_quota(response.ssl_sock.appid)
+                google_ip.report_connect_closed(response.ssl_sock.ip, "out of quota")
                 appid = appid_manager.get_appid()
 
                 if not appid:
@@ -366,8 +377,8 @@ def handler(method, url, headers, body, wfile):
 
     if response.status == 206:
         return RangeFetch(method, url, headers, body, response, wfile).fetch()
+
     try:
-        wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
         response_headers = {}
         for key, value in response.getheaders():
             key = key.title()
@@ -385,6 +396,7 @@ def handler(method, url, headers, body, wfile):
 
         send_to_browser = True
         try:
+            wfile.write("HTTP/1.1 %d %s\r\n" % (response.status, response.reason))
             for key in response_headers:
                 value = response_headers[key]
                 send_header(wfile, key, value)
@@ -398,6 +410,7 @@ def handler(method, url, headers, body, wfile):
         if len(response.app_msg):
             xlog.warn("APPID error:%d url:%s", response.status, url)
             wfile.write(response.app_msg)
+            google_ip.report_connect_closed(response.ssl_sock.ip, "app err")
             response.close()
             return
 
@@ -410,17 +423,30 @@ def handler(method, url, headers, body, wfile):
         body_length = end - start + 1
 
         last_read_time = time.time()
+        time_response = time.time()
         while True:
             if start > end:
+                time_finished = time.time()
+                if body_length > 1024 and time_finished - time_response > 0:
+                    speed = body_length / (time_finished - time_response)
+
+
+                    xlog.info("GAE %d|%s|%d t:%d s:%d hs:%d Spd:%d %d %s",
+                        response.ssl_sock.fd, response.ssl_sock.ip, response.ssl_sock.received_size, (time_finished-time_request)*1000,
+                        length, response.ssl_sock.handshake_time, int(speed), response.status, url)
+                else:
+                    xlog.info("GAE %d|%s|%d t:%d s:%d hs:%d %d %s",
+                        response.ssl_sock.fd, response.ssl_sock.ip, response.ssl_sock.received_size, (time_finished-time_request)*1000,
+                        length, response.ssl_sock.handshake_time, response.status, url)
+
                 response.ssl_sock.received_size += body_length
-                google_ip.report_ip_traffic(response.ssl_sock.ip, body_length)
                 https_manager.save_ssl_connection_for_reuse(response.ssl_sock, call_time=time_request)
-                xlog.info("GAE %d|%s|%d t:%d s:%d %d %s", response.ssl_sock.fd, response.ssl_sock.ip, response.ssl_sock.received_size, (time.time()-time_request)*1000, length, response.status, url)
                 return
 
             data = response.read(config.AUTORANGE_BUFSIZE)
             if not data:
                 if time.time() - last_read_time > 20:
+                    google_ip.report_connect_closed(response.ssl_sock.ip, "down fail")
                     response.close()
                     xlog.warn("read timeout t:%d len:%d left:%d %s", (time.time()-time_request)*1000, length, (end-start), url)
                     return
@@ -449,6 +475,7 @@ def handler(method, url, headers, body, wfile):
         time_cost = time_except - time_request
         if e[0] in (errno.ECONNABORTED, errno.EPIPE) or 'bad write retry' in repr(e):
             xlog.warn("gae_handler err:%r time:%d %s ", e, time_cost, url)
+            google_ip.report_connect_closed(response.ssl_sock.ip, "Net")
         else:
             xlog.exception("gae_handler except:%r %s", e, url)
     except Exception as e:
@@ -586,7 +613,7 @@ class RangeFetch(object):
 
                     if response.app_status == 404:
                         xlog.warning('APPID %r not exists, remove it.', response.ssl_sock.appid)
-                        appid_manager.report_not_exist(response.ssl_sock.appid)
+                        appid_manager.report_not_exist(response.ssl_sock.appid, response.ssl_sock.ip)
                         appid = appid_manager.get_appid()
                         if not appid:
                             xlog.error("no appid left")
@@ -604,6 +631,7 @@ class RangeFetch(object):
                             response.close()
                             return
 
+                    google_ip.report_connect_closed(response.ssl_sock.ip, "app err")
                     response.close()
                     range_queue.put((start, end, None))
                     continue
@@ -611,6 +639,7 @@ class RangeFetch(object):
                 if response.getheader('Location'):
                     self.url = urlparse.urljoin(self.url, response.getheader('Location'))
                     xlog.info('RangeFetch Redirect(%r)', self.url)
+                    google_ip.report_connect_closed(response.ssl_sock.ip, "reLocation")
                     response.close()
                     range_queue.put((start, end, None))
                     continue
@@ -618,7 +647,9 @@ class RangeFetch(object):
                 if 200 <= response.status < 300:
                     content_range = response.getheader('Content-Range')
                     if not content_range:
-                        xlog.warning('RangeFetch "%s %s" return Content-Range=%r: response headers=%r, retry %s-%s', self.method, self.url, content_range, response.getheaders(), start, end)
+                        xlog.warning('RangeFetch "%s %s" return Content-Range=%r: response headers=%r, retry %s-%s',
+                            self.method, self.url, content_range, response.getheaders(), start, end)
+                        google_ip.report_connect_closed(response.ssl_sock.ip, "no range")
                         response.close()
                         range_queue.put((start, end, None))
                         continue
@@ -647,6 +678,7 @@ class RangeFetch(object):
 
                     if start < end + 1:
                         xlog.warning('RangeFetch "%s %s" retry %s-%s', self.method, self.url, start, end)
+                        google_ip.report_connect_closed(response.ssl_sock.ip, "down err")
                         response.close()
                         range_queue.put((start, end, None))
                         continue
@@ -655,6 +687,7 @@ class RangeFetch(object):
                     xlog.info('>>>>>>>>>>>>>>> Successfully reached %d bytes.', start - 1)
                 else:
                     xlog.error('RangeFetch %r return %s', self.url, response.status)
+                    google_ip.report_connect_closed(response.ssl_sock.ip, "status err")
                     response.close()
                     range_queue.put((start, end, None))
                     continue

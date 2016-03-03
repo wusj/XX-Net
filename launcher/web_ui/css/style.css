@@ -1,25 +1,26 @@
 html, body {
-    font-family: "Segoe UI", "Microsoft YaHei";
+    font-family: "Microsoft YaHei", "Segoe UI Light", "Segoe UI", "Heiti SC";
     margin: 0;
     padding: 0;
 }
 
 button,
-input, 
+input,
 select,
 textarea {
-    font-family: "Segoe UI", "Microsoft YaHei" !important;
+    font-family:  "Microsoft YaHei", "Segoe UI Light", "Segoe UI", "Heiti SC" !important;
 }
 
 a {
     text-decoration: none !important;
+    cursor: pointer;
 }
 
 select {
     border: 2px solid #bdc3c7;
     color: #34495e;
     display: inline-block;
-    font-family: "Lato",sans-serif;
+    font-family: "Lato", sans-serif;
     font-size: 14px;
     padding: 8px 5px;
     height: 41px;
@@ -43,7 +44,7 @@ button[type=submit] {
 }
 
 select:focus {
-    border-color: #1abc9c;
+    border-color: #3498db;
     outline: none;
 }
 
@@ -65,14 +66,20 @@ div#header div#logo img {
     max-height: 32px;
 }
 
-div#header a#resize-window-trigger {
+div#header a#resize-window-trigger,
+div#header a#quit-trigger {
     display: block;
     padding-top: 8px;
 }
 
+div#header img {
+    max-height: 22px;
+}
+
+
 div#content {
     margin: 40px auto 0;
-    padding: 40px 0 0;
+    padding: 40px 0 40px;
 }
 
 div#content div#sidebar a {
@@ -103,6 +110,10 @@ div#content div.row-fluid > div.span2 > label {
     font-weight: bold;
     margin: 10px 0 0;
 }
+div#content div.row-fluid > div.span1 > label {
+    font-weight: bold;
+    margin: 10px 0 0;
+}
 
 div#content form div.row-fluid > div.span4 > label > a {
     font-weight: normal;
@@ -110,6 +121,7 @@ div#content form div.row-fluid > div.span4 > label > a {
 }
 
 div#content input[type=text],
+div#content input[type=number],
 div#content input[type=password] {
     -webkit-box-sizing: border-box;
        -moz-box-sizing: border-box;
@@ -131,6 +143,17 @@ div#content textarea {
             box-sizing: border-box;
 }
 
+div#content ul.nav-tabs {
+    margin-bottom: 0;
+}
+
+div#content div.tab-content {
+    border: 1px solid #ddd;
+    border-top: none;
+    min-height: 360px;
+    padding: 20px 10px;
+}
+
 /* Style for config.html in PHP-Proxy */
 div#content form#gae_proxy-php-config div.row-fluid div.span4 label[for=enable-php-proxy] {
     margin-top: 5px;
@@ -144,6 +167,25 @@ div#content form#gae_proxy-php-config div.row-fluid div.span4 label[for=enable-p
 /* Style for status.html */
 table#status td {
     word-wrap: break-word;
+}
+
+table#plan th {
+    text-align:center;
+}
+table#plan td {
+    text-align:center;
+    vertical-align:middle;
+}
+table#quota_list_table th {
+    text-align:center;
+}
+table#quota_list_table td {
+    text-align:center;
+    vertical-align:middle;
+}
+
+div#report-issue-modal {
+    position: fixed;
 }
 
 /* Style for logging.html */
@@ -199,9 +241,78 @@ div#content div#options div.row-fluid {
     margin-bottom: 10px;
 }
 
-div#content div#options div.row-fluid div.span4 {
+div#content div#options div.row-fluid div.span4, .bold {
     font-weight: bold;
     padding-top: 5px;
+}
+
+#noob-info {
+    padding: 10px;
+    margin: 40px 0;
+    color: #b94a48;
+    background-color: #f2dede;
+    border:1px solid;
+    border-color: #eed3d7;
+    border-radius: 4px;
+    transition: color .3s,background .3s,border .3s;
+}
+
+#noob-info.hard {
+    color: #468847;
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+}
+
+#noob-info.fluent {
+    color: #146C98;
+    background-color: #d9edf7;
+    border-color: #bce8f1;
+}
+
+#details, #update-options, #modules-manager{
+    overflow: hidden;
+}
+
+/* Style for config.html in X-Tunnel */
+.modal h5 {
+    margin: 0;
+}
+
+div#info.tab-pane div.section {
+    margin-bottom: 20px;
+}
+
+div#info.tab-pane form#login-form,
+div#info.tab-pane form#register-form {
+    max-width: 640px;
+}
+
+div#info.tab-pane div#account-information p, 
+div#help.tab-pane p {
+    margin-top: 10px;
+}
+
+div#plans.tab-pane h1.price {
+    text-align: center;
+}
+
+div#plans.tab-pane ul.details {
+    color: #8e8e8e;
+    list-style: none;
+    margin: 0;
+}
+
+div#plans.tab-pane ul.details div.span4.text-right {
+    color: #747474;
+    font-weight: bold;
+}
+
+div#history.tab-pane > div.row-fluid {
+    margin-bottom: 10px;
+}
+
+div#history.tab-pane h4 {
+    padding-top: 5px;    
 }
 
 /* Smaller than standard 1200 (devices and browsers) */

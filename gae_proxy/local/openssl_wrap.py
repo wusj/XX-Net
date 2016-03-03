@@ -3,26 +3,36 @@
 # but OpenSSL is different then ssl, so need a wrapper
 import sys
 import os
-
+import select
+import time
+import socket
 
 import OpenSSL
 SSLError = OpenSSL.SSL.WantReadError
 
-import select
-import time
-import socket
-import xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 
 ssl_version = ''
 
 class SSLConnection(object):
     """OpenSSL Connection Wrapper"""
 
-    def __init__(self, context, sock):
+    def __init__(self, context, sock, ip=None, on_close=None):
         self._context = context
         self._sock = sock
+        self.ip = ip
         self._connection = OpenSSL.SSL.Connection(context, sock)
         self._makefile_refs = 0
+        self.on_close = on_close
+
+    def __del__(self):
+        if self._sock:
+            socket.socket.close(self._sock)
+            self._sock = None
+            if self.on_close:
+                self.on_close(self.ip)
 
     def __getattr__(self, attr):
         if attr not in ('_context', '_sock', '_connection', '_makefile_refs'):
@@ -104,6 +114,9 @@ class SSLConnection(object):
             self._connection = None
             if self._sock:
                 socket.socket.close(self._sock)
+                self._sock = None
+                if self.on_close:
+                    self.on_close(self.ip)
         else:
             self._makefile_refs -= 1
 
@@ -128,7 +141,7 @@ class SSLConnection(object):
 
             if sys.platform == "darwin":
                 ssl_version = "TLSv1"
-            
+
             # freenas openssl support fix from twitter user "himanzero"
             # https://twitter.com/himanzero/status/645231724318748672
             if sys.platform == "freebsd9":

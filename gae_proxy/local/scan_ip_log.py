@@ -1,10 +1,11 @@
 
 import os
-import sys
 import shutil
 import time
 
-import xlog
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 from config import config
 
 class Scan_ip_log():

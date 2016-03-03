@@ -12,8 +12,6 @@ import hashlib
 import threading
 import subprocess
 
-import xlog
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 python_path = os.path.abspath( os.path.join(current_path, os.pardir, os.pardir, 'python27', '1.0'))
 data_path = os.path.abspath(os.path.join(current_path, os.pardir, os.pardir, 'data', 'gae_proxy'))
@@ -33,6 +31,9 @@ if __name__ == "__main__":
     elif sys.platform == "darwin":
         darwin_lib = os.path.abspath( os.path.join(python_path, 'lib', 'darwin'))
         sys.path.append(darwin_lib)
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 
 import OpenSSL
 
@@ -181,7 +182,7 @@ class CertUtil(object):
         ca.set_pubkey(req.get_pubkey())
         ca.add_extensions([
             OpenSSL.crypto.X509Extension(
-                'basicConstraints', False, 'CA:TRUE', ca, ca)
+                'basicConstraints', False, 'CA:TRUE', subject=ca, issuer=ca)
             ])
         ca.sign(key, CertUtil.ca_digest)
         #logging.debug("CA key:%s", key)

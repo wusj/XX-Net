@@ -1,24 +1,39 @@
 <div id="options">
     <div class="row-fluid">
-        <div class="span4">开机自动启动</div> <!-- .span4 -->
+        <div class="span4">
+            <label for="language">{{ _( "Language" ) }}</label>
+        </div>
+        <div class="span4">
+            <select id="language">
+                <!-- <option value="de_DE">Deutsch</option> -->
+                <option value="en_US">English</option>
+                <!-- <option value="es_VE">Español</option> -->
+                <option value="fa_IR">فارسی</option>
+                <!-- <option value="ja_JP">日本語</option> -->
+                <option value="zh_CN">简体中文</option>
+            </select>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="span4">{{ _( "Auto-Startup" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="auto-start" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">启动时弹出状态页</div> <!-- .span4 -->
+        <div class="span4">{{ _( "Popup Status Page on Startup" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="popup-webui" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">允许远程连接Web控制端<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">(帮助)</a></div> <!-- .span4 -->
+        <div class="span4">{{ _( "Enable Remote Web Control" ) }}<a href="https://github.com/XX-net/XX-Net/wiki/AllowRemoteConnectToWebControl" target="_blank">({{ _( "Help" ) }})</a></div> <!-- .span4 -->
         <div class="span8">
             <input id="allow-remote-connect" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
     </div> <!-- .row-fluid -->
     <div class="row-fluid">
-        <div class="span4">显示托盘图标(需要重启XX-Net)</div> <!-- .span4 -->
+        <div class="span4">{{ _( "Display System Tray(Restarting XX-Net Required)" ) }}</div> <!-- .span4 -->
         <div class="span8">
             <input id="show-systray" type="checkbox" data-toggle="switch" />
         </div> <!-- .span8 -->
@@ -26,7 +41,7 @@
     <div class="row-fluid">
         <div class="span4">
             <label for="update-options" class="pull-down-control">
-                <i class="icon icon-chevron-right"></i> 升级管理
+                <i class="icon icon-chevron-right" id="upgrade-pull-icon"></i> {{ _( "Upgrade Management" ) }}
             </label>
         </div> <!-- .span4 -->
     </div> <!-- .row-fluid -->
@@ -34,47 +49,43 @@
         <hr>
         <div class="row-fluid">
             <div class="span3">
-                <label for="check-update">自动升级到：<a href="https://github.com/XX-net/XX-Net/wiki/Auto-update" target="_blank">(帮助)</a></label>
+                <label for="check-update">{{ _( "Auto-Upgrade to" ) }}: <a href="https://github.com/XX-net/XX-Net/wiki/Auto-update" target="_blank">({{ _( "Help" ) }})</a></label>
             </div>
             <div class="span6">
                 <select id="check-update">
-                    <option value="dont-check">不升级</option>
-                    <option value="long-term-stable">长期稳定版</option>
-                    <option value="stable">稳定版</option>
-                    <option value="test">测试版</option>
+                    <option value="dont-check">{{ _( "Do not upgrade" ) }}</option>
+                    <option value="stable">{{ _( "Stable version" ) }}</option>
+                    <option value="test">{{ _( "Test version" ) }}</option>
                 </select>
             </div>
             <div class="span2">
-                <button class="btn btn-primary ladda-button" data-style="slide-up" id="check-new-version">检查最新版本</button>
+                <button class="btn btn-primary ladda-button" data-style="slide-up" id="check-new-version">{{ _( "Check the latest version" ) }}</button>
             </div>
             <div class="span1" id="check-new-version-process">
             </div>
         </div> <!-- .row-fluid -->
         <div class="row-fluid version-line hide">
             <div class="span2">
-                <label for="current-version-no">当前版本：</label>
+                <label for="current-version-no">{{ _( "Current version" ) }}: </label>
             </div>
-            <div class="span4" id="current-version-no" style="margin-top:10px">
-            </div>
+            <div class="span4" id="current-version-no" style="margin-top:10px"></div>
         </div> <!-- .row-fluid -->
         <div class="row-fluid version-line hide">
             <div class="span2">
-                <label for="test-version-no">测试版版本：</label>
+                <label for="test-version-no">{{ _( "Version of the test one" ) }}: </label>
             </div>
-            <div class="span4" id="test-version-no" style="margin-top:10px">
-            </div>
+            <div class="span4" id="test-version-no" style="margin-top:10px"></div>
             <div class="span2" >
-                <button class="btn btn-warning update-button ladda-button" data-style="expand-right" id="update-test-version">立即更新</button>
+                <button class="btn btn-warning update-button ladda-button" data-style="expand-right" id="update-test-version">{{ _( "Update now" ) }}</button>
             </div>
         </div> <!-- .row-fluid -->
         <div class="row-fluid version-line hide">
             <div class="span2">
-                <label for="stable-version-no">稳定版版本：</label>
+                <label for="stable-version-no">{{ _( "Version of the stable one" ) }}: </label>
             </div>
-            <div class="span4" id="stable-version-no" style="margin-top:10px">
-            </div>
+            <div class="span4" id="stable-version-no" style="margin-top:10px"></div>
             <div class="span2">
-                <button class="btn btn-primary update-button ladda-button" data-style="expand-right" id="update-stable-version">立即更新</button>
+                <button class="btn btn-primary update-button ladda-button" data-style="expand-right" id="update-stable-version">{{ _( "Update now" ) }}</button>
             </div>
         </div> <!-- .row-fluid -->
         <hr>
@@ -82,22 +93,28 @@
     <div class="row-fluid">
         <div class="span4">
             <label for="modules-manager" class="pull-down-control">
-                <i class="icon icon-chevron-right"></i> 模块管理
+                <i class="icon icon-chevron-right"></i> {{ _( "Module management" ) }}
             </label>
         </div> <!-- .span4 -->
     </div> <!-- .row-fluid -->
     <div id="modules-manager" style="display: none;">
         <hr>
         <div class="row-fluid">
-            <div class="span4">启用Goagent</div> <!-- .span4 -->
+            <div class="span4">{{ _( "Enable" ) }} GAE proxy</div> <!-- .span4 -->
             <div class="span8">
                 <input id="gae_proxy-enable" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <div class="row-fluid" >
-            <div class="span4">启用PHP代理</div> <!-- .span4 -->
+            <div class="span4">{{ _( "Enable" ) }} PHP proxy</div> <!-- .span4 -->
             <div class="span8">
                 <input id="php-enable" type="checkbox" data-toggle="switch" />
+            </div> <!-- .span8 -->
+        </div> <!-- .row-fluid -->
+        <div class="row-fluid" >
+            <div class="span4">{{ _( "Enable" ) }} X_tunnel</div> <!-- .span4 -->
+            <div class="span8">
+                <input id="x-tunnel-enable" type="checkbox" data-toggle="switch" />
             </div> <!-- .span8 -->
         </div> <!-- .row-fluid -->
         <hr>
@@ -106,7 +123,7 @@
 
 <!-- JavaScript -->
 <script type="text/javascript">
-    title('系统配置选项');
+    title('{{ _( "System configuration options" ) }}');
 </script>
 <script type="text/javascript">
     $(function() {
@@ -115,11 +132,11 @@
 </script>
 <script type="text/javascript">
     $(function() {
-        getStatus();
+        getConfig();
     });
 </script>
 <script type="text/javascript">
-    function getStatus() {
+    function getConfig() {
         var pageRequests = {
             'cmd': 'get_config'
         };
@@ -167,6 +184,13 @@
 
                     $( "#php-enable").prop('checked', true);
                 }
+                if ( result['x_tunnel_enable'] != 0 ) {
+                    $( "#x-tunnel-enable").parent().removeClass('switch-off');
+                    $( "#x-tunnel-enable").parent().addClass('switch-on');
+
+                    $( "#x-tunnel-enable").prop('checked', true);
+                }
+                $( "#language").val(result['language']);
                 $( "#check-update").val(result['check_update']);
             },
             error: function() {
@@ -192,6 +216,17 @@
     });
 </script>
 <script type="text/javascript">
+    $('#language').change(function() {
+        var key   = 'language',
+            value = $(this).val();
+
+        setConfig(key, value);
+
+        setTimeout(function () {
+            location.reload();
+        }, 500);
+    });
+
     $('#auto-start').change(function() {
         var isChecked = $(this).is(':checked'),
             key       = 'auto_start',
@@ -246,6 +281,13 @@
 
         setConfig(key, value);
     });
+    $('#x-tunnel-enable').change(function() {
+        var isChecked = $(this).is(':checked'),
+            key       = 'x_tunnel_enable',
+            value     = isChecked ? 1 : 0;
+
+        setConfig(key, value);
+    });
 </script>
 <script type="text/javascript">
     function setConfig(key, value) {
@@ -261,10 +303,10 @@
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    if ( key == 'gae_proxy_enable' || key == 'php_enable' ) {
+                    if ( key == 'gae_proxy_enable' || key == 'php_enable' || key == 'x_tunnel_enable') {
                         restartingService(key);
                     } else {
-                        tip('设置已成功保存.', 'success');
+                        tip('{{ _( "Settings saved successfully." ) }}', 'success');
                     }
 
                 } else {
@@ -279,19 +321,21 @@
 </script>
 <script type="text/javascript">
     function displayErrorMessage() {
-        tip('发生未知错误, 请刷新页面重试.', 'error');
+        tip('{{ _( "Unkown error occured. Please refresh the page and try again" ) }}', 'error');
     }
 </script>
 <script type="text/javascript">
     function restartingService(serviceNameSlug) {
         var serviceName     = '',
             restatingTime   = 5,
-            messageTemplate = '正在配置服务[%s], 页面将在%s秒内刷新.';
+            messageTemplate = '{{ _( "Configuring the service[%s]. This page will refresh within %s seconds." ) }}';
 
         if ( serviceNameSlug == 'gae_proxy_enable' ) {
-            serviceName     = 'GAEProxy';
+            serviceName     = '{{ _( "GAE Proxy" ) }}';
         } else if ( serviceNameSlug == 'php_enable' ) {
-            serviceName     = 'PHP代理';
+            serviceName     = '{{ _( "PHP proxy" ) }}';
+        } else if ( serviceNameSlug == 'x_tunnel_enable' ) {
+            serviceName     = '{{ _( "X_tunnel proxy" ) }}';
         } else {
             serviceName     = 'Unknown';
         }
@@ -304,54 +348,59 @@
     }
 </script>
 <script type="text/javascript">
-function versionCompare(v1, v2, options) {
-    var lexicographical = options && options.lexicographical,
-        zeroExtend = options && options.zeroExtend,
-        v1parts = v1.split('.'),
-        v2parts = v2.split('.');
+    function versionCompare(v1, v2, options) {
+        var lexicographical = options && options.lexicographical,
+            zeroExtend = options && options.zeroExtend,
+            v1parts = v1.split('.'),
+            v2parts = v2.split('.');
 
-    function isValidPart(x) {
-        return (lexicographical ? /^\d+[A-Za-z]*$/ : /^\d+$/).test(x);
-    }
-
-    if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
-        return NaN;
-    }
-
-    if (zeroExtend) {
-        while (v1parts.length < v2parts.length) v1parts.push("0");
-        while (v2parts.length < v1parts.length) v2parts.push("0");
-    }
-
-    if (!lexicographical) {
-        v1parts = v1parts.map(Number);
-        v2parts = v2parts.map(Number);
-    }
-
-    for (var i = 0; i < v1parts.length; ++i) {
-        if (v2parts.length == i) {
-            return 1;
+        function isValidPart(x) {
+            return (lexicographical ? /^\d+[A-Za-z]*$/ : /^\d+$/).test(x);
         }
 
-        if (v1parts[i] == v2parts[i]) {
-            continue;
+        if (!v1parts.every(isValidPart) || !v2parts.every(isValidPart)) {
+            return NaN;
         }
-        else if (v1parts[i] > v2parts[i]) {
-            return 1;
+
+        if (zeroExtend) {
+            while (v1parts.length < v2parts.length) v1parts.push("0");
+            while (v2parts.length < v1parts.length) v2parts.push("0");
         }
-        else {
+
+        if (!lexicographical) {
+            v1parts = v1parts.map(Number);
+            v2parts = v2parts.map(Number);
+        }
+
+        for (var i = 0; i < v1parts.length; ++i) {
+            if (v2parts.length == i) {
+                return 1;
+            }
+
+            if (v1parts[i] == v2parts[i]) {
+                continue;
+            }
+            else if (v1parts[i] > v2parts[i]) {
+                return 1;
+            }
+            else {
+                return -1;
+            }
+        }
+
+        if (v1parts.length != v2parts.length) {
             return -1;
         }
-    }
 
-    if (v1parts.length != v2parts.length) {
-        return -1;
+        return 0;
     }
-
-    return 0;
-}
     $('#check-new-version').click(function(){
-        var loading = Ladda.create(this);
+        check_new_version();
+    });
+
+    function check_new_version(){
+        var button = $('#check-new-version');
+        var loading = Ladda.create(button[0]);
         loading.start();
 
         var pageRequests = {};
@@ -359,12 +408,21 @@ function versionCompare(v1, v2, options) {
 
         $.ajax({
             type: 'GET',
-            url: '/config',
+            url: '/update',
             data: pageRequests,
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    createVerInfo(result);
+                    $('#current-version-no').html(result['current_version']);
+                    $('#test-version-no').html(result['test_version']);
+                    $('#stable-version-no').html(result['stable_version']);
+
+                    if(versionCompare(result['test_version'], result['current_version']) <= 0){
+                        $('#update-test-version').addClass("hide");
+                    }
+                    if(versionCompare(result['stable_version'], result['current_version']) <= 0){
+                        $('#update-stable-version').addClass("hide");
+                    }
 
                     $('.version-line').removeClass('hide');
                     $('.alert').removeClass('alert-error').addClass('hide');
@@ -381,36 +439,10 @@ function versionCompare(v1, v2, options) {
                 loading.stop();
             }
         });
-    });
+    }
 </script>
 
 <script type="text/javascript">
-    var dtd         = $.Deferred();
-    var configUrl   = '/config?cmd=get_new_version';
-    var progressUrl = 'download?cmd=get_progress';
-
-    // 检测下载状态
-    $.getJSON(progressUrl, function (rst) {
-        Object.keys(rst).forEach(function (v) {
-            if (rst[v].status === 'downloading' && v.indexOf('XX-Net/zip') > -1) {
-                dtd.resolve((v.split('XX-Net/zip/'))[1]);
-            }
-        });
-    });
-
-    // 展示下载状态
-    dtd.promise().done(function (ver) {
-        $.getJSON(configUrl, function(rst) {
-            createVerInfo(rst);
-
-            $('#check-new-version').hide();
-            $('#update-options').slideDown('fast', function() {
-                $('.version-line').slideDown('fast');
-
-                showDownloadProgress(ver);
-            });
-        });
-    });
 
     $('.update-button').click(function(){
         var pageRequests = {};
@@ -419,129 +451,116 @@ function versionCompare(v1, v2, options) {
         var id = $(this).attr('id');
         if(id == 'update-test-version'){
             pageRequests['version'] = $('#test-version-no').html();
+            //window.updating_button = $('#update-test-version');
         }else if(id == 'update-stable-version'){
             pageRequests['version'] = $('#stable-version-no').html();
+            //window.updating_button = $('#update-stable-version');
         }
 
-        var ver = $(this).attr('data-ver');
-        showDownloadProgress(ver);
+        window.loading = Ladda.create(this);
+        window.loading.start();
 
         $.ajax({
             type: 'GET',
-            url: '/config',
+            url: '/update',
             data: pageRequests,
             dataType: 'JSON',
             success: function(result) {
                 if ( result['res'] == 'success' ) {
-                    tip('更新进行中。。。.', "info");
+                    tip( '{{ _( "Updating in progress ..." ) }}', "info");
+                    window.timer.play()
                 } else {
-                    displayErrorMessage();
+                    tip( result['reason'], "warning");
                 }
-                $('#check-new-version-process').addClass('hide');
             },
             error: function() {
                 displayErrorMessage();
-                $('#check-new-version-process').addClass('hide');
             }
         });
     });
 
+    function updateProgress(){
+        $.getJSON('update?cmd=get_progress', function (rst) {
+            Object.keys(rst).forEach(function (v) {
+                if ( v == "update_status"){
+                    var stat = rst[v];
 
-    /**
-     * 生成版本信息
-     * @param rst 来自 url /config 的json
-     */
-    function createVerInfo (rst) {
-        var $updateTestVersion = $('#update-test-version');
-        var $updateStableVersion = $('#update-stable-version');
+                    if ( stat === "Idle"){
+                        window.timer.stop();
+                        return;
+                    }
 
-        var testVersion = rst['test_version'];
-        var stableVersion = rst['stable_version'];
-        var currentVersion = rst['current_version'];
+                    if ( $('#upgrade-pull-icon').hasClass('icon-chevron-right') ){
+                        var current_version = $('#current-version-no').html();
+                        if ( current_version == ""){
+                            $('#current-version-no').html(" ");
+                            // avoid check next time.
 
-        $updateTestVersion.attr('data-ver', testVersion);
-        $updateStableVersion.attr('data-ver', stableVersion);
+                            check_new_version();
+                        }
 
-        $('#current-version-no').html(currentVersion);
-        $('#test-version-no').html(testVersion);
-        $('#stable-version-no').html(stableVersion);
+                        $('.version-line').slideDown('fast');
 
-        if(versionCompare(testVersion, currentVersion) <= 0){
-            $updateTestVersion.addClass("hide");
-        }
-        if(versionCompare(stableVersion, currentVersion) <= 0){
-          $updateStableVersion.addClass("hide");
-      }
-  }
+                        $('#upgrade-pull-icon').removeClass('icon-chevron-right');
+                        $('#upgrade-pull-icon').addClass('icon-chevron-down');
+                        $('#update-options').slideDown();
+                    }
 
+                    if( stat == "Finished"){
+                        tip( stat, 'info');
+                        window.loading.stop();
+                        window.timer.stop();
+                        return;
+                    }else if ( stat.indexOf('Fail') > -1){
+                        tip( stat, 'warning');
+                        window.timer.stop();
+                    }else{
+                        tip( stat, 'info');
+                    }
+                }else if (v.indexOf('XX-Net/zip') > -1) {
+                    if (!window.updating_button){
+                        var p = v.indexOf('XX-Net/zip') + 11;
+                        var version = v.substring(p, v.length);
+                        var button;
+                        if ( version == $('#test-version-no').html() ){
+                            button = $('#update-test-version');
+                        }else if ( version == $('#stable-version-no').html() ){
+                            button = $('#update-stable-version');
+                        }else{
+                            return;
+                        }
+                        window.updating_button = button;
+                    }
 
-  /**
-   * 展示按钮的下载状态
-   * @param ver
-   */
-  function showDownloadProgress (ver) {
-      var $btn = $('.update-button')
-              .add('#check-new-version').hide()
-              .filter('[data-ver="'+ ver +'"]').show();
+                    if (!window.loading){
+                        window.loading = Ladda.create(window.updating_button[0]);
+                        window.loading.start();
+                    }
+                    var data = rst[v];
+                    if ( data.status === 'downloading'){
+                        var progress =  (+data.downloaded / +data.size) * 100 ;
 
-      var loading = Ladda.create($btn[0]),
-          label   = $btn.find('.ladda-label');
-
-      loading.start();
-
-      getDownloadProgress(ver, function (status, progress) {
-          switch (status) {
-              case 'downloading':
-                  loading.setProgress(progress);
-                  progress && label.text('正在更新.. ' + parseInt(progress * 100) + '%');
-                  break;
-
-              case 'finished':
-                  loading.setProgress(progress);
-                  loading.stop();
-
-                  label.text('更新完毕');
-                  $btn.prop('disabled', true);
-                  break;
-
-              default:
-                  loading.stop();
-
-                  $btn.text('发生未知错误');
-          }
-      });
-  }
-
-
-    /**
-     * 轮询获取下载进度
-     * @param ver
-     * @param cb(status, progress)
-     * @param [delay = 500] 延迟时间
-     */
-    function getDownloadProgress (ver, cb, delay) {
-        var progressUrl = 'download?cmd=get_progress',
-            verUrl      = 'https://codeload.github.com/XX-net/XX-Net/zip/' + ver;
-
-        setTimeout(function () {
-            $.getJSON(progressUrl, function(rst) {
-                var data = rst[verUrl];
-
-                switch (data.status) {
-                    case 'downloading':
-                        cb('downloading', +data.downloaded / +data.size);
-
-                        getDownloadProgress(ver, cb, delay);
-                        break;
-
-                    case 'finished':
-                        cb('finished', 1);
-                        break;
-
-                    default:
-                    // do nothing
+                        window.loading.setProgress(progress);
+                        window.updating_button.html('{{ _( "Downloading ..." ) }}' + parseInt(progress) + '%');
+                    }else if (data.status === "finished"){
+                        window.updating_button.html( '{{ _( "Download completed" ) }}');
+                        window.updating_button.prop('disabled', true);
+                    }
                 }
             });
-        }, delay || 500);
+        });
     }
+
+    $(document).ready(function(){
+        window.timer = $.timer(function() {
+            updateProgress();
+        });
+
+        window.timer.set({
+            time: 1000,
+            autostart: true
+        });
+
+        updateProgress();
+    });
 </script>

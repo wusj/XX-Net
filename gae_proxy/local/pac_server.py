@@ -5,12 +5,15 @@ import os
 import base64
 import time
 import re
-import xlog
 import thread
-import simple_http_server
 import urllib2
 import urlparse
 
+
+import simple_http_server
+
+from xlog import getLogger
+xlog = getLogger("gae_proxy")
 
 from config import config
 
